@@ -4,6 +4,7 @@ const db =
 
 mongoose
   .connect(db)
+
   .then(() => {
     console.log("connection done");
   })

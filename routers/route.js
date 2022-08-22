@@ -15,29 +15,134 @@ router.post("/student", async (req, res) => {
   }
 });
 
+// router.get("/student", async (req, res) => {
+//   try {
+//     const getUser = await Studentds.find();
+//     res.send(getUser);
+//     console.log("All Students Data", getUser);
+//   } catch (err) {
+//     res.status(400).send(err);
+//   }
+// });
+
 router.get("/student", async (req, res) => {
-  try {
-    let { page, size, sort } = req.query;
-    if (!page) {
-      page = 1;
-    }
-    if (!size) {
-      size = 10;
-    }
-    const limit = parseInt(size);
-
-    const getUser = await Studentds.find()
-      .sort({ votes: 1, _id: -1 })
-      .limit(limit);
-    //   .pretty();
-
-    res.send({ page, size, Info: getUser });
-
-    console.log("All Students Data", getUser);
-  } catch (err) {
-    res.status(400).send(err);
+  var pageNo = parseInt(req.query.pageNo);
+  var size = parseInt(req.query.size);
+  var query = {};
+  if (pageNo < 0 || pageNo === 0) {
+    response = {
+      error: true,
+      message: "invalid page number, should start with 1",
+    };
+    return res.json(response);
   }
+  query.skip = size * (pageNo - 1);
+  query.limit = size;
+  query.sort = { votes: 1, _id: 1 };
+  // Find some documents
+  Studentds.count({}, function (err, totalCount) {
+    if (err) {
+      response = { error: true, message: "Error fetching data" };
+    }
+    Studentds.find({}, {}, query, function (err, data) {
+      // Mongo command to fetch all data from collection.
+      if (err) {
+        response = { error: true, message: "Error fetching data" };
+      } else {
+        var totalPages = Math.ceil(totalCount / size);
+        response = { pagesNumbers: totalPages, StudentData: data };
+      }
+      res.json(response);
+    });
+  });
+  // Studentds.pretty();
 });
+
+// router.get("/student", async (req, res) => {
+//   try {
+//     let { page, size, step, sort } = req.query;
+//     if (!page) {
+//       page = req.query.page || 1;
+//     }
+//     if (!size) {
+//       size = req.query.limit || 2;
+//     }
+//     if (!step) {
+//       step = req.query.skip || 0;
+//     }
+//     const limit = parseInt(size);
+
+//     const skip = parseInt(step);
+
+//     const getUser = await Studentds.find()
+//       .sort({ votes: 1, _id: -1 })
+//       .skip(skip);
+//       .limit(limit)
+
+//     //   .pretty();
+
+//     res.send({ page, size, step, Info: getUser });
+
+//     console.log("All Students Data", getUser);
+//   } catch (err) {
+//     res.status(400).send(err);
+//   }
+// });
+
+// router.get("/student", async (req, res) => {
+//   try {
+//     let { page, size, step, sort } = req.query;
+//     if (!page) {
+//       page = req.query.page || 1;
+//     }
+//     if (!size) {
+//       size = req.query.limit || 2;
+//     }
+//     if (!step) {
+//       step = (page - 1) * size;
+//     }
+//     const limit = parseInt(size);
+
+//     const skip = parseInt(step);
+
+//     const Studentds = new Studentds();
+
+//     const getUser = await Studentds.find()
+//       .sort({ votes: 1, _id: -1 })
+//       .limit(limit)
+//       .skip(skip);
+//     //   .pretty();
+
+//     res.send({ page, size, step, Info: getUser });
+
+//     console.log("All Students Data", getUser);
+//   } catch (err) {
+//     res.status(400).send(err);
+//   }
+// });
+
+// router.get("/student", async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page); // Make sure to parse the page to number
+//     // We are using the '3 layer' architecture explored on the 'bulletproof node.js architecture'
+//     // Basically, it's just a class where we have our business logic
+//     const Studentds = new Studentds();
+//     const users = await Studentds.getAll(page);
+//     return res.status(200).json(users);
+//   } catch (e) {
+//     return res.status(500).json(e);
+//   }
+// });
+
+// class UserPaginationExample {
+//   getAll(page = 1) {
+//     const PAGE_SIZE = 20; // Similar to 'limit'
+//     const skip = (page - 1) * PAGE_SIZE; // For page 1, the skip is: (1 - 1) * 20 => 0 * 20 = 0
+//     return Studentds.find({})
+//       .skip(skip) // Same as before, always use 'skip' first
+//       .limit(PAGE_SIZE);
+//   }
+// }
 
 router.get("/student/:id", async (req, res) => {
   try {
